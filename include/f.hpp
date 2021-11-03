@@ -1,7 +1,3 @@
-//
-// Created by Daniil Pavlenko on 02.11.2021.
-//
-
 #include "Array.hpp"
 #include <cstddef>
 
