@@ -24,13 +24,14 @@ Cache::Cache(Memory *_parent_memory, std::size_t _size, std::size_t _way, std::s
                                                                  std::vector<std::vector<std::uint8_t>> (way,
                                                                          std::vector<std::uint8_t> (line_size, 0)));
     tags = std::vector<std::vector<std::size_t>> (blocks_number, std::vector<std::size_t> (way, 0));
-    last_used = std::vector<std::vector<int>> (blocks_number, std::vector<int> (way, -1));
+    last_used = std::vector<std::vector<int>> (blocks_number,
+            std::vector<int> (way, -1)); // -1 shows that cache was not used yet
     log_line_size = __builtin_ctz(line_size);
     log_blocks_number = __builtin_ctz(blocks_number);
 }
 
 std::vector<std::uint8_t> Cache::read_bytes(std::size_t address, std::size_t num) {
-    all_operations++;
+    all_operations++; // based on fact that query always fits in one cache line
     std::vector<std::uint8_t> ans(num, 0);
     for (std::size_t i = 0; i < num; i++) {
         ans[i] = get_byte(address + i);
@@ -39,7 +40,7 @@ std::vector<std::uint8_t> Cache::read_bytes(std::size_t address, std::size_t num
 }
 
 void Cache::write_bytes(std::size_t address, std::vector<std::uint8_t> &bytes) {
-    all_operations++;
+    all_operations++; // based on fact that query always fits in one cache line
     for (std::size_t i = 0; i < bytes.size(); i++) {
         get_byte(address + i) = bytes[i];
     }
@@ -84,7 +85,7 @@ void Cache::load_bytes(std::size_t address) {
             latest_line = j;
     }
     parent_memory->write_bytes(get_address(tags[block_num][latest_line], block_num),
-                               lines[block_num][latest_line]);
+                               lines[block_num][latest_line]); // write changed data back in memory
     tags[block_num][latest_line] = get_tag(address);
     lines[block_num][latest_line] = bytes;
     last_used[block_num][latest_line] = T++;
