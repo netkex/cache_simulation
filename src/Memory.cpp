@@ -1,5 +1,14 @@
 #include "Memory.hpp"
 
+std::size_t get_log(std::size_t n) {
+    std::size_t cur = 1;
+    std::size_t cnt = 0;
+    while (cur * 2 <= n) {
+        cur *= 2;
+        cnt++;
+    }
+    return cnt;
+}
 
 RAM::RAM(std::size_t _size): size(_size) {
     data = std::vector<std::size_t> (size + 1, 0);
@@ -26,8 +35,8 @@ Cache::Cache(Memory *_parent_memory, std::size_t _size, std::size_t _way, std::s
     tags = std::vector<std::vector<std::size_t>> (blocks_number, std::vector<std::size_t> (way, 0));
     last_used = std::vector<std::vector<int>> (blocks_number,
             std::vector<int> (way, -1)); // -1 shows that cache was not used yet
-    log_line_size = __builtin_ctz(line_size);
-    log_blocks_number = __builtin_ctz(blocks_number);
+    log_line_size = get_log(line_size);
+    log_blocks_number = get_log(blocks_number);
 }
 
 std::vector<std::uint8_t> Cache::read_bytes(std::size_t address, std::size_t num) {
