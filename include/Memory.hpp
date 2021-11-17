@@ -8,6 +8,7 @@
 
 class Memory {
 public:
+    // count_op_flag shows if it is necessary to count query to statistics
     virtual std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num, bool count_op_flag) = 0;
     virtual void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes, bool count_op_flag) = 0;
 };
@@ -34,8 +35,8 @@ public:
     int get_all_operations();
 
 private:
-    std::uint8_t& get_byte(std::size_t address, bool count_flag);
-    void load_bytes(std::size_t address, bool count_flag);
+    std::uint8_t& get_byte(std::size_t address, bool count_op_flag);
+    void load_bytes(std::size_t address, bool count_op_flag);
     std::size_t get_block_num(std::size_t address);
     std::size_t get_tag(std::size_t address);
     std::size_t get_address(std::size_t tag, std::size_t block_num);
