@@ -8,15 +8,15 @@
 
 class Memory {
 public:
-    virtual std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num) = 0;
-    virtual void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes) = 0;
+    virtual std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num, bool count_op_flag) = 0;
+    virtual void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes, bool count_op_flag) = 0;
 };
 
 class RAM : public Memory {
 public:
     explicit RAM(std::size_t _size);
-    std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num) override;
-    void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes) override;
+    std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num, bool count_op_flag) override;
+    void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes, bool count_op_flag) override;
 
 private:
     std::vector<std::size_t> data;
@@ -26,16 +26,16 @@ private:
 class Cache : public Memory {
 public:
     Cache (Memory* _parent_memory, std::size_t _size, std::size_t _way, std::size_t _line_size);
-    std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num) override;
-    void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes) override;
+    std::vector<std::uint8_t> read_bytes(std::size_t address, std::size_t num, bool count_op_flag) override;
+    void write_bytes(std::size_t address, std::vector<std::uint8_t>& bytes, bool count_op_flag) override;
 
     void zero_stats();
     int get_missed_operations();
     int get_all_operations();
 
 private:
-    std::uint8_t& get_byte(std::size_t address);
-    void load_bytes(std::size_t address);
+    std::uint8_t& get_byte(std::size_t address, bool count_flag);
+    void load_bytes(std::size_t address, bool count_flag);
     std::size_t get_block_num(std::size_t address);
     std::size_t get_tag(std::size_t address);
     std::size_t get_address(std::size_t tag, std::size_t block_num);

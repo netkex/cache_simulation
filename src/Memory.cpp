@@ -14,11 +14,11 @@ RAM::RAM(std::size_t _size): size(_size) {
     data = std::vector<std::size_t> (size + 1, 0);
 }
 
-std::vector<std::uint8_t> RAM::read_bytes(std::size_t address, std::size_t num) {
+std::vector<std::uint8_t> RAM::read_bytes(std::size_t address, std::size_t num, bool count_op_flag) {
     return {&data[address], &data[address + num]};
 }
 
-void RAM::write_bytes(std::size_t address, std::vector<std::uint8_t> &bytes) {
+void RAM::write_bytes(std::size_t address, std::vector<std::uint8_t> &bytes, bool count_op_flag) {
     for (std::size_t i = 0; i < bytes.size(); i++) {
         data[address + i] = bytes[i];
     }
@@ -39,19 +39,21 @@ Cache::Cache(Memory *_parent_memory, std::size_t _size, std::size_t _way, std::s
     log_blocks_number = get_log(blocks_number);
 }
 
-std::vector<std::uint8_t> Cache::read_bytes(std::size_t address, std::size_t num) {
-    all_operations++; // based on fact that query always fits in one cache line
+std::vector<std::uint8_t> Cache::read_bytes(std::size_t address, std::size_t num, bool count_op_flag) {
+    if (count_op_flag)
+        all_operations++; // based on fact that query always fits in one cache line
     std::vector<std::uint8_t> ans(num, 0);
     for (std::size_t i = 0; i < num; i++) {
-        ans[i] = get_byte(address + i);
+        ans[i] = get_byte(address + i, count_op_flag);
     }
     return ans;
 }
 
-void Cache::write_bytes(std::size_t address, std::vector<std::uint8_t> &bytes) {
-    all_operations++; // based on fact that query always fits in one cache line
+void Cache::write_bytes(std::size_t address, std::vector<std::uint8_t> &bytes, bool count_op_flag) {
+    if (count_op_flag)
+        all_operations++; // based on fact that query always fits in one cache line
     for (std::size_t i = 0; i < bytes.size(); i++) {
-        get_byte(address + i) = bytes[i];
+        get_byte(address + i, count_op_flag) = bytes[i];
     }
 }
 
@@ -63,7 +65,7 @@ int Cache::get_missed_operations() { return missed_operations; }
 
 int Cache::get_all_operations() { return all_operations; }
 
-std::uint8_t& Cache::get_byte(std::size_t address) {
+std::uint8_t& Cache::get_byte(std::size_t address, bool count_op_flag) {
     auto block_num = get_block_num(address);
     auto address_tag = get_tag(address);
     for (std::size_t j = 0; j < way; j++) {
@@ -72,14 +74,15 @@ std::uint8_t& Cache::get_byte(std::size_t address) {
             return lines[block_num][j][address % (1 << log_line_size)];
         }
     }
-    load_bytes(address >> log_line_size << log_line_size);
-    return get_byte(address);
+    load_bytes(address >> log_line_size << log_line_size, count_op_flag);
+    return get_byte(address, count_op_flag);
 }
 
-void Cache::load_bytes(std::size_t address) {
-    missed_operations++;
+void Cache::load_bytes(std::size_t address, bool count_op_flag) {
+    if (count_op_flag)
+        missed_operations++;
     auto block_num = get_block_num(address);
-    auto bytes = parent_memory->read_bytes(address, line_size);
+    auto bytes = parent_memory->read_bytes(address, line_size, count_op_flag);
     for (std::size_t j = 0; j < way; j++) {
         if (last_used[block_num][j] == -1) {
             tags[block_num][j] = get_tag(address);
@@ -94,7 +97,7 @@ void Cache::load_bytes(std::size_t address) {
             latest_line = j;
     }
     parent_memory->write_bytes(get_address(tags[block_num][latest_line], block_num),
-                               lines[block_num][latest_line]); // write changed data back in memory
+                               lines[block_num][latest_line], false); // write changed data back in memory
     tags[block_num][latest_line] = get_tag(address);
     lines[block_num][latest_line] = bytes;
     last_used[block_num][latest_line] = T++;

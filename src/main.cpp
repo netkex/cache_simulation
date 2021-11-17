@@ -30,11 +30,7 @@ int main() {
 
     std::cout << "L1 successful: " <<
         (1 - L1.get_missed_operations() * 1. / L1.get_all_operations()) * 100 << "%" << std::endl;
-
     std::cout << "L2 successful: " <<
-        (1 - L2.get_missed_operations() * 1. / L2.get_all_operations()) * 100 << "%" << std::endl;
-//    Alternative way to count L2 successful:
-//    std::cout << "L2 successful: " <<
-//        (1 - L2.get_missed_operations() * 1. / L1.get_missed_operations()) * 100 << "%" << std::endl;
+        (1 - L2.get_missed_operations() * 1. / L1.get_missed_operations()) * 100 << "%" << std::endl;
     return 0;
 }
